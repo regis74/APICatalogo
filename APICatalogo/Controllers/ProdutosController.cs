@@ -34,7 +34,7 @@ namespace APICatalogo.Controllers
             return _context.Produtos.AsNoTracking().ToList();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "ObterProduto")] //vincula uma rota nomeada (Name) ao Http retorno do post
         public ActionResult<Produto> Get(int id)
         {
             //var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
@@ -48,5 +48,69 @@ namespace APICatalogo.Controllers
 
             return produto;
         }
+
+        [HttpPost]
+        public ActionResult Post([FromBody]Produto produto) //sempre FromBody para recuperar os dados do Body (quem faz isso é o Model Binding)
+        {
+            //a partir da versao 2.1 nao precisa mais fazer!!!
+            //pq o atributo [ApiController] já faz isso automaticamente
+            //dados da requisicao validos?
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
+
+            _context.Produtos.Add(produto); //esta em memoria o Add
+            _context.SaveChanges(); //como se fosse um commit
+
+            //http response, após inclusao do produto, retorna o ID
+            return new CreatedAtRouteResult("ObterProduto", //retorna uma rota 
+                                            new { id = produto.ProdutoId }, //parametros da Action 
+                                            produto );  //corpo da requisicao (Body)
+
+
+
+        }
+
+
+        [HttpPut("{id}")]
+        public ActionResult Put(int id, [FromBody] Produto produto)
+        {
+            //a partir da versao 2.1 nao precisa mais fazer!!!
+            //pq o atributo [ApiController] já faz isso automaticamente
+            //dados da requisicao validos?
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
+
+            if(id != produto.ProdutoId)
+                return BadRequest();
+
+            _context.Entry(produto).State = EntityState.Modified;
+            _context.SaveChanges();
+            return Ok();
+
+        }
+
+        [HttpDelete("{id}")]
+        public ActionResult<Produto> Delete(int id)
+        {
+            var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
+
+            //pode usar o Find tbm (só pode usar se a busca for pela PK)
+            //a vantagem do Find é que ele primeiro busca na memória e depois no banco de dados
+            //diferente do FirstOrDefault que ja vai direto no BD
+            //var produto = _context.Find(id);
+
+
+            if (produto == null)
+                return NotFound(); //404
+
+            _context.Produtos.Remove(produto);
+            _context.SaveChanges();
+            return produto;
+        }
+
     }
 }
