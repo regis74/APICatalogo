@@ -32,7 +32,9 @@ namespace APICatalogo
             services.AddDbContext<AppDbContext>(options => 
                                                 options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddControllers();
+            services.AddControllers()
+                    .AddNewtonsoftJson(options => //se der erro nessa linha, tem que referenciar o Microsoft.AspNetCore.Mvc.NewtonsoftJson
+                        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore ); 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
