@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using APICatalogo.Context;
+using APICatalogo.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,6 +32,10 @@ namespace APICatalogo
             //a string de conexao esta no appsettings.json
             services.AddDbContext<AppDbContext>(options => 
                                                 options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
+
+            //indica que o tempo de vida da instancia do servico que for criada, vai ser criada cada vez q for solicitada
+            //implementacao de MeuServico.cs
+            services.AddTransient<IMeuServico, MeuServico>();
 
             services.AddControllers()
                     .AddNewtonsoftJson(options => //se der erro nessa linha, tem que referenciar o Microsoft.AspNetCore.Mvc.NewtonsoftJson

@@ -1,6 +1,7 @@
 ﻿using APICatalogo.Context;
 using APICatalogo.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 namespace APICatalogo.Controllers
 {
     [Route("api/[Controller]")]
-    [ApiController]
+   [ApiController] //esse atributo é novo na versao do .netcore - nao exite que faça o modelState
     public class ProdutosController : ControllerBase
     {
 
@@ -22,32 +23,131 @@ namespace APICatalogo.Controllers
             _context = contexto;
         }
 
+        /// <summary>
+        /// SINCRONO
+        /// </summary>
+        //IEnumerable de Produto pq retornar uma Lista de Produtos
+        //ActionResult retornar os codigos http 200, 400, etc
+        //[HttpGet]
+        //public ActionResult<IEnumerable<Produto>> Get()
+        //{
+        //    //return _context.Produtos.ToList();
+
+        //    //para melhorar o desempenho e nao verificar o estado, utiliza-se o AsNoTracking
+        //    //Só funciona para metodos Get
+        //    return _context.Produtos.AsNoTracking().ToList();
+        //}
+
+        /// <summary>
+        /// ASINCRONO - a justificativa é acesso a banco de dados, ou uso de I/O
+        /// </summary>
         //IEnumerable de Produto pq retornar uma Lista de Produtos
         //ActionResult retornar os codigos http 200, 400, etc
         [HttpGet]
-        public ActionResult<IEnumerable<Produto>> Get()
+        public async Task<ActionResult<IEnumerable<Produto>>> GetAsync()
         {
-            //return _context.Produtos.ToList();
-
-            //para melhorar o desempenho e nao verificar o estado, utiliza-se o AsNoTracking
-            //Só funciona para metodos Get
-            return _context.Produtos.AsNoTracking().ToList();
+            return await _context.Produtos.AsNoTracking().ToListAsync();
         }
 
-        [HttpGet("{id}", Name = "ObterProduto")] //vincula uma rota nomeada (Name) ao Http retorno do post
-        public ActionResult<Produto> Get(int id)
-        {
-            //var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
+        //utilizando a interface IActionResult
+        //[HttpGet]
+        //public IActionResult Get()
+        //{
+        //    var produto = _context.Produtos.FirstOrDefault();
+        //    if (produto == null)
+        //        return NotFound();
 
-            //para melhorar o desempenho e nao verificar o estado, utiliza-se o AsNoTracking
-            //Só funciona para metodos Get
-            var produto = _context.Produtos.AsNoTracking().FirstOrDefault(p => p.ProdutoId == id);
+        //    return Ok(produto);
+        //}
+
+
+        //utilizando a ActionResult<T> 
+        //só foi disponibilizada a partir da versao 2.1 do netcore
+        //[HttpGet]
+        //public ActionResult<Produto> Get()
+        //{
+        //    var produto = _context.Produtos.FirstOrDefault();
+        //    if (produto == null)
+        //        return NotFound();
+
+        //    return produto;
+        //}
+
+        //colocando ":int:min(1)}" define uma restricao de valores, nao vai mais aceitar 0 por exemplo
+        //com isso ele já retona 404 sem entrar no método, evita processamento desnecessario como uma ida ao BD realizar consulta
+        //o proprio HTTP já bloqueia
+        //[HttpGet("{id:int:min(1)}", Name = "ObterProduto")] //vincula uma rota nomeada (Name) ao Http retorno do post
+        //public ActionResult<Produto> Get(int id)
+        //{
+        //    //var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
+
+        //    //para melhorar o desempenho e nao verificar o estado, utiliza-se o AsNoTracking
+        //    //Só funciona para metodos Get
+        //    var produto = _context.Produtos.AsNoTracking().FirstOrDefault(p => p.ProdutoId == id);
+
+        //    if (produto == null)
+        //        return NotFound(); //404
+
+        //    return produto;
+        //}
+
+        //colocando ":int:min(1)}" define uma restricao de valores, nao vai mais aceitar 0 por exemplo
+        //com isso ele já retona 404 sem entrar no método, evita processamento desnecessario como uma ida ao BD realizar consulta
+        //o proprio HTTP já bloqueia
+        //[HttpGet("{id:int:min(1)}", Name = "ObterProduto")] //vincula uma rota nomeada (Name) ao Http retorno do post
+        //public async Task<ActionResult<Produto>> GetAsync(int id, [BindRequired] string nome) //bindRequired obriga informar via QueryString
+        //{
+        //    var nomeProduto = nome;
+            
+        //    //var produto = _context.Produtos.FirstOrDefault(p => p.ProdutoId == id);
+
+        //    //para melhorar o desempenho e nao verificar o estado, utiliza-se o AsNoTracking
+        //    //Só funciona para metodos Get
+        //    var produto = _context.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.ProdutoId == id);
+
+        //    if (produto == null)
+        //        return NotFound(); //404
+
+        //    //foreach (var item in produto.Result)
+        //    //{
+        //    //    item.Nome = item.Nome + nomeProduto;
+        //    //}
+
+        //    produto.Result.Nome = produto.Result.Nome + " " + nomeProduto;
+
+        //    return await produto;
+        //}
+
+        //colocando ":int:min(1)}" define uma restricao de valores, nao vai mais aceitar 0 por exemplo
+        //com isso ele já retona 404 sem entrar no método, evita processamento desnecessario como uma ida ao BD realizar consulta
+        //o proprio HTTP já bloqueia
+        [HttpGet("{id:int:min(1)}", Name = "ObterProduto")] //vincula uma rota nomeada (Name) ao Http retorno do post
+        public async Task<ActionResult<Produto>> GetAsync([FromQuery]int id) //FromQuery altera o comportamento padrao... obtem da QueryString e nao mais da rota
+        {
+              var produto = _context.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.ProdutoId == id);
 
             if (produto == null)
                 return NotFound(); //404
 
-            return produto;
+            return await produto;
         }
+
+        //alpha é a restricao para receber somente valores alfanumericos
+        //sempre que entrar com letras ira cair nesse endpoint
+        //[HttpGet("{valor:alpha:length(5)}")]
+        //public ActionResult<IEnumerable<Produto>> GetAlpha5(string valor)
+        //{
+        //    var ret = valor;
+        //    return _context.Produtos.AsNoTracking().ToList();
+        //}
+
+        //alpha com tamanho 5 é a restricao para receber somente valores alfanumericos
+        //sempre que entrar com letras ira cair nesse endpoint
+        //[HttpGet("{valor:alpha(6)}")]
+        //public ActionResult<IEnumerable<Produto>> GetAlpha()
+        //{
+        //    return _context.Produtos.AsNoTracking().ToList();
+        //}
 
         [HttpPost]
         public ActionResult Post([FromBody]Produto produto) //sempre FromBody para recuperar os dados do Body (quem faz isso é o Model Binding)
