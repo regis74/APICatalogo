@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using APICatalogo.Context;
+using APICatalogo.Extensions;
+using APICatalogo.Filter;
+using APICatalogo.Logging;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -28,6 +31,9 @@ namespace APICatalogo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //adiciona / configura serviço de log
+            services.AddScoped<ApiLoggingFilter>();
+
             //essa eu inclui para o contexto de BD
             //a string de conexao esta no appsettings.json
             services.AddDbContext<AppDbContext>(options => 
@@ -43,23 +49,39 @@ namespace APICatalogo
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
+            //adicionando middleware de tratamento de erro
+            app.ConfigureExceptionHandler();
+
+            //adicionando middleware para redirecionar para https
             app.UseHttpsRedirection();
 
+            //adicionando middleware  de roteamento
             app.UseRouting();
 
+            //adicionando middleware que habilita a autorizacao
             app.UseAuthorization();
 
+            //adicionando middleware  que executa o endpoint do request atual
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+
+            //adiciona Provider para o Logger
+            loggerFactory.AddProvider(
+                new CustomLoggerProvider(
+                    new CustomLoggerProviderConfiguration
+                                        {
+                                            LogLevel = LogLevel.Information
+                                        }                           )
+                                    );;
         }
     }
 }

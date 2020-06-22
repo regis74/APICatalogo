@@ -1,4 +1,5 @@
 ﻿using APICatalogo.Context;
+using APICatalogo.Filter;
 using APICatalogo.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -44,6 +45,7 @@ namespace APICatalogo.Controllers
         //IEnumerable de Produto pq retornar uma Lista de Produtos
         //ActionResult retornar os codigos http 200, 400, etc
         [HttpGet]
+        [ServiceFilter(typeof(ApiLoggingFilter))]
         public async Task<ActionResult<IEnumerable<Produto>>> GetAsync()
         {
             return await _context.Produtos.AsNoTracking().ToListAsync();
@@ -124,7 +126,15 @@ namespace APICatalogo.Controllers
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")] //vincula uma rota nomeada (Name) ao Http retorno do post
         public async Task<ActionResult<Produto>> GetAsync([FromQuery]int id) //FromQuery altera o comportamento padrao... obtem da QueryString e nao mais da rota
         {
-              var produto = _context.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.ProdutoId == id);
+            //throw new Exception("Exception ao retornar produto pelo id");
+            //string[] teste = null;
+            //if (teste.Length > 0)
+            //{
+
+            //}
+
+
+            var produto = _context.Produtos.AsNoTracking().FirstOrDefaultAsync(p => p.ProdutoId == id);
 
             if (produto == null)
                 return NotFound(); //404

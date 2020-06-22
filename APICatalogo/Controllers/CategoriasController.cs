@@ -3,6 +3,8 @@ using APICatalogo.Models;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,19 +16,36 @@ namespace APICatalogo.Controllers
     [ApiController]
     public class CategoriasController : ControllerBase
     {
-
         //injecao de dependencia da classe DbContext
         //isso é possivel pq na classe Startup.cs foi injetada a 'services.AddDbContext'
         private readonly AppDbContext _context;
-        public CategoriasController(AppDbContext contexto)
+        private readonly IConfiguration _configuration;
+        private readonly ILogger _logger;
+
+        //injeta no construtor AppDbContext, IConfiguration e ILogger
+        public CategoriasController(AppDbContext contexto, IConfiguration config, ILogger<CategoriasController> logger) 
         {
             _context = contexto;
+            _configuration = config;
+            _logger = logger;
         }
+        
+        [HttpGet("autor")]
+        public string GetAutor()
+        {
+            //le de appsettings.json
+            var autor = _configuration["autor"];
+            var conexao = _configuration["ConnectionStrings:DefaultConnection"];
+            return $"Autor: {autor} - String de conexão: {conexao}";
+        }
+
+
 
         //servico MeuServico [FromServices]
         [HttpGet("saudacao/{nome}")]
         public ActionResult<string> GetSaudacao([FromServices] IMeuServico meuservico, string nome)
         {
+            _logger.LogInformation("###### Get api/saudacao ######");
             return meuservico.Saudacao(nome);
         }
 
@@ -35,6 +54,8 @@ namespace APICatalogo.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Categoria>> Get()
         {
+            _logger.LogInformation("###### Get api/categorias ######");
+            
             //return _context.Produtos.ToList();
 
             //para melhorar o desempenho e nao verificar o estado, utiliza-se o AsNoTracking
