@@ -6,6 +6,7 @@ using APICatalogo.Context;
 using APICatalogo.Extensions;
 using APICatalogo.Filter;
 using APICatalogo.Logging;
+using APICatalogo.Repository;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -31,6 +32,9 @@ namespace APICatalogo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //adiciona UnitOfWork (camada superior a Repository)
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+
             //adiciona / configura serviço de log
             services.AddScoped<ApiLoggingFilter>();
 
