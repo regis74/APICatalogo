@@ -46,7 +46,7 @@ namespace APICatalogo.Logging
 
         private void EscreverTextoNoArquivo(string mensagem)
         {
-            string caminhoArquivoLog = @"C:\dev\udemy\netcore\Marcoratti\APICatalogo\APICatalogo\logtxt\log.txt";
+            string caminhoArquivoLog = @"C:\Temp\log.txt";
             using (StreamWriter streamWriter = new StreamWriter(caminhoArquivoLog, true))
             {
                 try
@@ -58,6 +58,7 @@ namespace APICatalogo.Logging
                 {
 
                     throw ex;
+
                 }
             }
         }
